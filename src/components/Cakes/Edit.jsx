@@ -1,46 +1,56 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import Swal from "sweetalert2";
 
-export default function EditCake() {
+export default function EditCakes() {
     const { id } = useParams();
-    const [cake, setCake] = useState({});
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const [namaCakes, setNamaCakes] = useState("");
+    const [flavor, setFlavor] = useState("");
+    const [size, setSize] = useState("");
+    const [price, setPrice] = useState("");
 
     useEffect(() => {
-        fetchCakeDetails();
+        fetchCake();
     }, []);
 
-    const fetchCakeDetails = async () => {
+    const fetchCake = async () => {
         try {
             const response = await axios.get(`https://delivery-cake-api.vercel.app/api/api/cakes/${id}`);
-            setCake(response.data.result);
+            const cake = response.data.result;
+            setNamaCakes(cake.name);
+            setFlavor(cake.flavor);
+            setSize(cake.size);
+            setPrice(cake.price);
         } catch (error) {
-            setError("Error: " + error.message);
+            Swal.fire("Error", "Gagal memuat data kue.", "error");
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
-        setSuccess("");
+
+        if (!namaCakes || !flavor || !size || !price) {
+            Swal.fire("Error", "Semua kolom harus diisi.", "error");
+            return;
+        }
 
         try {
-            const response = await axios.put(`https://delivery-cake-api.vercel.app/api/api/cakes/${id}`, cake);
-            if (response.status === 200) {
-                setSuccess("Kue berhasil diperbarui.");
-            }
+            await axios.put(`https://delivery-cake-api.vercel.app/api/api/cakes/${id}`, {
+                name: namaCakes,
+                flavor,
+                size,
+                price: parseFloat(price),
+            });
+            Swal.fire("Berhasil", "Kue berhasil diubah.", "success");
         } catch (error) {
-            setError("Error: " + error.message);
+            Swal.fire("Error", "Terjadi kesalahan dalam menyimpan perubahan.", "error");
         }
     };
 
     return (
         <div className="container mt-5">
             <h2 className="mb-4">Edit Cake</h2>
-            {error && <div className="alert alert-danger">{error}</div>}
-            {success && <div className="alert alert-success">{success}</div>}
 
             <form onSubmit={handleSubmit}>
                 <div className="mb-3">
@@ -48,8 +58,8 @@ export default function EditCake() {
                     <input
                         type="text"
                         className="form-control"
-                        value={cake.name || ""}
-                        onChange={(e) => setCake({ ...cake, name: e.target.value })}
+                        value={namaCakes}
+                        onChange={(e) => setNamaCakes(e.target.value)}
                     />
                 </div>
                 <div className="mb-3">
@@ -57,8 +67,8 @@ export default function EditCake() {
                     <input
                         type="text"
                         className="form-control"
-                        value={cake.flavor || ""}
-                        onChange={(e) => setCake({ ...cake, flavor: e.target.value })}
+                        value={flavor}
+                        onChange={(e) => setFlavor(e.target.value)}
                     />
                 </div>
                 <div className="mb-3">
@@ -66,8 +76,8 @@ export default function EditCake() {
                     <input
                         type="text"
                         className="form-control"
-                        value={cake.size || ""}
-                        onChange={(e) => setCake({ ...cake, size: e.target.value })}
+                        value={size}
+                        onChange={(e) => setSize(e.target.value)}
                     />
                 </div>
                 <div className="mb-3">
@@ -75,8 +85,8 @@ export default function EditCake() {
                     <input
                         type="number"
                         className="form-control"
-                        value={cake.price || ""}
-                        onChange={(e) => setCake({ ...cake, price: e.target.value })}
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
                     />
                 </div>
                 <button type="submit" className="btn btn-primary">

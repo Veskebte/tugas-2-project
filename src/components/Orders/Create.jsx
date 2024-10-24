@@ -1,23 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; 
 import axios from "axios";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 
-export default function createOrders(){
+const MySwal = withReactContent(Swal);
+
+export default function CreateOrders() {
   const [customerName, setCustomerName] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [cakeId, setCakeId] = useState("");
   const [cakesList, setCakesList] = useState([]);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     const fetchCakes = async () => {
       try {
-        const response = await axios.get("https://delivery-cake-api.vercel.app/api/api/orders");
+        const response = await axios.get("https://delivery-cake-api.vercel.app/api/api/cakes");
         setCakesList(response.data.result);
       } catch (error) {
-        console.error("Failed to fetch cakes", error);
+        MySwal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Gagal mengambil data kue!',
+        });
       }
     };
     fetchCakes();
@@ -25,53 +31,52 @@ export default function createOrders(){
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
 
-    // Validation
     if (!customerName || !customerAddress || !deliveryDate || !paymentMethod || !cakeId) {
-      setError("Semua bidang harus diisi");
+      MySwal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Semua bidang harus diisi!',
+      });
       return;
     }
 
     try {
-      const response = await axios.post(
-        "https://delivery-cake-api.vercel.app/api/api/orders",
-        {
-          customer_name: customerName,
-          customer_address: customerAddress,
-          delivery_date: deliveryDate,
-          payment_method: paymentMethod,
-          cake_id: cakeId,
-        }
-      );
+      const response = await axios.post("https://delivery-cake-api.vercel.app/api/api/orders", {
+        customer_name: customerName,
+        customer_address: customerAddress,
+        delivery_date: deliveryDate,
+        payment_method: paymentMethod,
+        cake_id: cakeId,
+      });
 
       if (response.status === 201) {
-        setSuccess("Order berhasil ditambahkan");
+        MySwal.fire(
+          'Berhasil!',
+          'Order berhasil ditambahkan!',
+          'success'
+        );
         setCustomerName("");
         setCustomerAddress("");
         setDeliveryDate("");
         setPaymentMethod("cash");
         setCakeId("");
-      } else {
-        setError("Terjadi kesalahan dalam menyimpan order");
       }
     } catch (error) {
-      setError("Terjadi kesalahan saat membuat order");
+      MySwal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Order gagal dibuat!',
+      });
     }
   };
 
   return (
     <div className="container mt-5">
       <h2 className="mb-4">Create Order</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
-
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
-          <label htmlFor="customerName" className="form-label">
-            Nama Pelanggan
-          </label>
+          <label htmlFor="customerName" className="form-label">Nama Pelanggan</label>
           <input
             type="text"
             className="form-control"
@@ -84,9 +89,7 @@ export default function createOrders(){
         </div>
 
         <div className="mb-3">
-          <label htmlFor="customerAddress" className="form-label">
-            Alamat Pelanggan
-          </label>
+          <label htmlFor="customerAddress" className="form-label">Alamat Pelanggan</label>
           <input
             type="text"
             className="form-control"
@@ -99,9 +102,7 @@ export default function createOrders(){
         </div>
 
         <div className="mb-3">
-          <label htmlFor="deliveryDate" className="form-label">
-            Tanggal Pengiriman
-          </label>
+          <label htmlFor="deliveryDate" className="form-label">Tanggal Pengiriman</label>
           <input
             type="date"
             className="form-control"
@@ -113,9 +114,7 @@ export default function createOrders(){
         </div>
 
         <div className="mb-3">
-          <label htmlFor="paymentMethod" className="form-label">
-            Metode Pembayaran
-          </label>
+          <label htmlFor="paymentMethod" className="form-label">Metode Pembayaran</label>
           <select
             className="form-select"
             id="paymentMethod"
@@ -129,9 +128,7 @@ export default function createOrders(){
         </div>
 
         <div className="mb-3">
-          <label htmlFor="cakeId" className="form-label">
-            Pilih Cake
-          </label>
+          <label htmlFor="cakeId" className="form-label">Pilih Cake</label>
           <select
             className="form-select"
             id="cakeId"
@@ -141,16 +138,12 @@ export default function createOrders(){
           >
             <option value="">Pilih Cake</option>
             {cakesList.map((cake) => (
-              <option key={cake.id} value={cake.id}>
-                {cake.nama}
-              </option>
+              <option key={cake.id} value={cake.id}>{cake.name}</option>
             ))}
           </select>
         </div>
 
-        <button type="submit" className="btn btn-primary">
-          Create
-        </button>
+        <button type="submit" className="btn btn-primary">Create</button>
       </form>
     </div>
   );

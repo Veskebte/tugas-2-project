@@ -1,21 +1,18 @@
 import React, { useState } from "react";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 export default function CreateCakes() {
     const [namaCakes, setNamaCakes] = useState("");
     const [flavor, setFlavor] = useState("");
     const [size, setSize] = useState("");
     const [price, setPrice] = useState("");
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
-        setSuccess("");
 
         if (!namaCakes || !flavor || !size || !price) {
-            setError("Semua kolom harus diisi.");
+            Swal.fire("Error", "Semua kolom harus diisi.", "error");
             return;
         }
 
@@ -24,28 +21,24 @@ export default function CreateCakes() {
                 name: namaCakes,
                 flavor,
                 size,
-                price: parseFloat(price)
+                price: parseFloat(price),
             });
 
             if (response.status === 201) {
-                setSuccess("Kue berhasil ditambahkan.");
+                Swal.fire("Berhasil", "Kue berhasil ditambahkan.", "success");
                 setNamaCakes("");
                 setFlavor("");
                 setSize("");
                 setPrice("");
-            } else {
-                setError("Terjadi kesalahan dalam menyimpan data.");
             }
         } catch (error) {
-            setError("Error: " + error.message);
+            Swal.fire("Error", "Terjadi kesalahan dalam menyimpan data.", "error");
         }
     };
 
     return (
         <div className="container mt-5">
             <h2 className="mb-4">Create Cake</h2>
-            {error && <div className="alert alert-danger">{error}</div>}
-            {success && <div className="alert alert-success">{success}</div>}
 
             <form onSubmit={handleSubmit}>
                 <div className="mb-3">
