@@ -55,7 +55,7 @@ importers:
         specifier: ^15.11.0
         version: 15.11.0
       vite:
-        specifier: ^5.4.9
+        specifier: ^5.4.10
         version: 5.4.10
 
 packages:
