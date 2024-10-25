@@ -1,174 +1,189 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Link, NavLink } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import { NavLink } from "react-router-dom";
 
 const MySwal = withReactContent(Swal);
 
-export default function CreateOrders({ onOrderCreated }) {
-    const [customerName, setCustomerName] = useState("");
-    const [customerAddress, setCustomerAddress] = useState("");
-    const [deliveryDate, setDeliveryDate] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState("cash");
-    const [cakeId, setCakeId] = useState("");
-    const [cakesList, setCakesList] = useState([]);
+export default function ListOrders() {
+  const [orders, setOrders] = useState([]);
+  const [newOrder, setNewOrder] = useState({
+    cake_id: "",
+    customer_name: "",
+    customer_address: "",
+    delivery_date: "",
+    payment_method: "cash",
+  });
+  const [cakesList, setCakesList] = useState([]);
+  const [statusUpdate, setStatusUpdate] = useState({
+    id: null,
+    status: "pending"
+  });
 
-    useEffect(() => {
-        const fetchCakes = async () => {
-            try {
-                const response = await axios.get("https://delivery-cake-api.vercel.app/api/api/cakes");
-                setCakesList(response.data.result);
-            } catch (error) {
-                MySwal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Gagal mengambil data kue!',
-                    toast: true,
-                    position: 'top-end',
-                    timer: 3000,
-                    showConfirmButton: false,
-                });
-            }
-        };
-        fetchCakes();
-    }, []);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!customerName || !customerAddress || !deliveryDate || !paymentMethod || !cakeId) {
-            MySwal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Semua bidang harus diisi!',
-                toast: true,
-                position: 'top-end',
-                timer: 3000,
-                showConfirmButton: false,
-            });
-            return;
-        }
-
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get("https://delivery-cake-api.vercel.app/api/api/orders");
+        setOrders(response.data.result);
+      } catch (error) {
         MySwal.fire({
-            title: "Konfirmasi Tambah Order",
-            text: "Apakah Anda yakin ingin menambahkan order ini?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Ya, Tambah!",
-            cancelButtonText: "Batal",
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    const response = await axios.post("https://delivery-cake-api.vercel.app/api/api/orders", {
-                        customer_name: customerName,
-                        customer_address: customerAddress,
-                        delivery_date: deliveryDate,
-                        payment_method: paymentMethod,
-                        cake_id: cakeId,
-                    });
-
-                    if (response.status === 201) {
-                        MySwal.fire({
-                            icon: "success",
-                            title: "Berhasil",
-                            text: "Order berhasil ditambahkan!",
-                            toast: true,
-                            position: "top-end",
-                            timer: 3000,
-                            showConfirmButton: false,
-                        });
-                        onOrderCreated(response.data);
-                        setCustomerName("");
-                        setCustomerAddress("");
-                        setDeliveryDate("");
-                        setPaymentMethod("cash");
-                        setCakeId("");
-                    }
-                } catch (error) {
-                    MySwal.fire({
-                        icon: "error",
-                        title: "Gagal",
-                        text: "Order gagal dibuat!",
-                        toast: true,
-                        position: "top-end",
-                        timer: 3000,
-                        showConfirmButton: false,
-                    });
-                }
-            }
+          icon: 'error',
+          title: 'Gagal',
+          text: 'Terjadi kesalahan saat mengambil data orders',
         });
+      }
     };
 
-    return (
-        <div className="container mt-5">
-            <h2 className="mb-4">Tambah Order Baru</h2>
+    const fetchCakes = async () => {
+      try {
+        const response = await axios.get("https://delivery-cake-api.vercel.app/api/api/cakes");
+        setCakesList(response.data.result);
+      } catch (error) {
+        MySwal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: 'Terjadi kesalahan saat mengambil data cakes',
+        });
+      }
+    };
 
-            <NavLink to="/orders" className="btn btn-secondary mb-3">
-                Kembali ke List Orders
-            </NavLink>
+    fetchOrders();
+    fetchCakes();
+  }, []);
 
-            <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                    <label htmlFor="customerName" className="form-label">Nama Pelanggan</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        id="customerName"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                    />
-                </div>
-                <div className="mb-3">
-                    <label htmlFor="customerAddress" className="form-label">Alamat Pelanggan</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        id="customerAddress"
-                        value={customerAddress}
-                        onChange={(e) => setCustomerAddress(e.target.value)}
-                    />
-                </div>
-                <div className="mb-3">
-                    <label htmlFor="deliveryDate" className="form-label">Tanggal Pengiriman</label>
-                    <input
-                        type="date"
-                        className="form-control"
-                        id="deliveryDate"
-                        value={deliveryDate}
-                        onChange={(e) => setDeliveryDate(e.target.value)}
-                    />
-                </div>
-                <div className="mb-3">
-                    <label htmlFor="paymentMethod" className="form-label">Metode Pembayaran</label>
-                    <select
-                        className="form-select"
-                        id="paymentMethod"
-                        value={paymentMethod}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                    >
-                        <option value="cash">Cash</option>
-                        <option value="cashless">Cashless</option>
-                    </select>
-                </div>
-                <div className="mb-3">
-                    <label htmlFor="cakeId" className="form-label">Kue</label>
-                    <select
-                        className="form-select"
-                        id="cakeId"
-                        value={cakeId}
-                        onChange={(e) => setCakeId(e.target.value)}
-                    >
-                        <option value="">Pilih Kue</option>
-                        {cakesList.map((cake) => (
-                            <option key={cake.id} value={cake.id}>
-                                {cake.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <button type="submit" className="btn btn-primary">Tambah Order</button>
-            </form>
-        </div>
-    );
+  const handleDelete = async (id) => {
+    MySwal.fire({
+      title: 'Apakah Anda yakin?',
+      text: "Anda tidak dapat mengembalikan order ini!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, hapus!'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete(`https://delivery-cake-api.vercel.app/api/api/orders/${id}`);
+          setOrders(orders.filter((order) => order.id !== id));
+          MySwal.fire(
+            'Terhapus!',
+            'Order berhasil dihapus.',
+            'success'
+          );
+        } catch (error) {
+          MySwal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: 'Terjadi kesalahan saat menghapus order',
+          });
+        }
+      }
+    });
+  };
+
+  const handleInputChange = (e) => {
+    setNewOrder({ ...newOrder, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post("https://delivery-cake-api.vercel.app/api/api/orders", newOrder);
+      if (response.status === 201) {
+        MySwal.fire('Berhasil!', 'Order berhasil dibuat!', 'success');
+        setOrders([...orders, response.data]);
+        setNewOrder({
+          cake_id: "",
+          customer_name: "",
+          customer_address: "",
+          delivery_date: "",
+          payment_method: "cash",
+        });
+      }
+    } catch (error) {
+      MySwal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Order gagal dibuat!',
+      });
+    }
+  };
+
+  const handleStatusChange = async (orderId, status) => {
+    try {
+      const response = await axios.patch(`https://delivery-cake-api.vercel.app/api/api/orders/${orderId}/status`, { status });
+      if (response.status === 200) {
+        setOrders(orders.map((order) => order.id === orderId ? { ...order, status } : order));
+        MySwal.fire('Berhasil!', 'Status order berhasil diperbarui!', 'success');
+      }
+    } catch (error) {
+      MySwal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Gagal memperbarui status order!',
+      });
+    }
+  };
+
+  return (
+    <div className="container mt-5">
+      <h2 className="mb-4">List Orders</h2>
+
+      {/* NavLink untuk menambah order baru */}
+      <NavLink to="/orders/create" className="btn btn-primary mb-3">
+        Tambah Order
+      </NavLink>
+
+      {/* Tabel Orders */}
+      <table className="table table-bordered">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nama Pelanggan</th>
+            <th>Alamat Pelanggan</th>
+            <th>Tanggal Pengiriman</th>
+            <th>Metode Pembayaran</th>
+            <th>Cake</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.length === 0 ? (
+            <tr>
+              <td colSpan="8" className="text-center">Tidak ada data order</td>
+            </tr>
+          ) : (
+            orders.map((order) => (
+              <tr key={order.id}>
+                <td>{order.id}</td>
+                <td>{order.customer_name}</td>
+                <td>{order.customer_address}</td>
+                <td>{order.delivery_date}</td>
+                <td>{order.payment_method}</td>
+                <td>{order.cake.name}</td>
+                <td>{order.status}</td>
+                <td>
+                  <select
+                    value={order.status}
+                    onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  <button className="btn btn-danger ms-2" onClick={() => handleDelete(order.id)}>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
 }
